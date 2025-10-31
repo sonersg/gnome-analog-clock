@@ -1,0 +1,9 @@
+{
+  "name": "Desktop Analog Clock",
+  "description": "A lightweight analog clock for GNOME desktop.",
+  "uuid": "gnome-analog-clock@sonersg.com",
+  "shell-version": ["45", "46", "47", "48", "49"],
+  "url": "https://github.com/sonersg/gnome-analog-clock",
+  "version": 1,
+  "versionName": "2025Ekim31"
+}
