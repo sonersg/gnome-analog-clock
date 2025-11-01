@@ -34,15 +34,37 @@ import GLib from 'gi://GLib'; // ← Add this import to update time
 
 export default class ExampleExtension extends Extension {
   enable() {
-    const monitor = Main.layoutManager.primaryMonitor;
+    const monitorWidth = Main.layoutManager.primaryMonitor.width;
+    const monitorHeight = Main.layoutManager.primaryMonitor.height;
     const clockSize = 222;
-    const margin = 100; // 100px, adjust as needed
+    const margin = 99; // 100px, adjust as needed
 
-    const x = monitor.width - clockSize - margin;
+    const positions = [
+      { x: margin, y: margin }, // Top-left
+      { x: (monitorWidth - clockSize) / 2, y: margin }, // Top-center
+      { x: monitorWidth - clockSize - margin, y: margin }, // Top-right
+      // Center positions
+      { x: margin, y: (monitorHeight - clockSize) / 2 }, // Center-left
+      { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 }, // Center
+      {
+        x: monitorWidth - clockSize - margin,
+        y: (monitorHeight - clockSize) / 2,
+      }, // Center-right
+      // Bottom positions
+      { x: margin, y: monitorHeight - clockSize - margin }, // Bottom-left
+      {
+        x: (monitorWidth - clockSize) / 2,
+        y: monitorHeight - clockSize - margin,
+      }, // Bottom-center
+      {
+        x: monitorWidth - clockSize - margin,
+        y: monitorHeight - clockSize - margin,
+      }, // Bottom-right
+    ];
 
     this._desktopIcon = new St.DrawingArea({
-      x: x,
-      y: margin,
+      x: positions[2].x,
+      y: positions[2].y,
       width: clockSize,
       height: clockSize,
       reactive: false,
