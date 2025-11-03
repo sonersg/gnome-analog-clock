@@ -119,13 +119,18 @@ export default class ExampleExtension extends Extension {
     const baseRadius = Math.min(width, height) / 2 - 10; // leave some margin
 
     // Define styling
-    const majorTickLength = 20; // longer for 12, 3, 6, 9
-    const minorTickLength = 10; // shorter for other hours
-    const majorLineWidth = 8; // thicker
-    const minorLineWidth = 4; // thinner
+    // const majorTickLength = 20; // longer for 12, 3, 6, 9
+    // const minorTickLength = 10; // shorter for other hours
+    // const majorLineWidth = 8; // thicker
+    // const minorLineWidth = 4; // thinner
+    const majorTickLength = Math.ceil(baseRadius * 0.2); // longer for 12, 3, 6, 9
+    const minorTickLength = Math.ceil(baseRadius * 0.1); // shorter for other hours
+    const majorLineWidth = Math.ceil(baseRadius * 0.1); // thicker
+    const minorLineWidth = Math.ceil(baseRadius * 0.05); // thinner
 
     // Optional: set color (e.g., white)
     // cr.setSourceRGBA(1, 1, 1, 1);
+    // cr.setSourceRGBA(0, 0, 0, 0.5);
 
     for (let i = 0; i < 12; i++) {
       const isMajor = i % 3 === 0; // 0, 3, 6, 9 → every 3rd hour
@@ -150,7 +155,7 @@ export default class ExampleExtension extends Extension {
     const hourHandLength = baseRadius - majorTickLength;
     const minuteHandLength = baseRadius;
     const secondHandLength = baseRadius;
-    const handLineWidth = 11;
+    const handLineWidth = majorLineWidth;
 
     const now = new Date();
     const hours = now.getHours() % 12;
@@ -175,8 +180,8 @@ export default class ExampleExtension extends Extension {
       centerX + minuteHandLength * Math.cos(minAngle),
       centerY + minuteHandLength * Math.sin(minAngle)
     );
-    cr.setLineWidth(handLineWidth - 2);
-    cr.setSourceRGBA(1, 1, 1, 0.8);
+    cr.setLineWidth(handLineWidth * 0.9);
+    cr.setSourceRGBA(1, 1, 1, 1);
     cr.stroke();
 
     // Second hand
@@ -186,14 +191,14 @@ export default class ExampleExtension extends Extension {
       centerX + secondHandLength * Math.cos(secAngle),
       centerY + secondHandLength * Math.sin(secAngle)
     );
-    cr.setLineWidth(handLineWidth - 4);
-    cr.setSourceRGBA(1, 0, 0, 0.8);
+    cr.setLineWidth(handLineWidth * 0.7);
+    cr.setSourceRGBA(1, 0, 0, 0.7);
     cr.stroke();
 
     // Center dot
     // cr.arc(x, y, radius, angle1, angle2)
-    cr.arc(centerX, centerY, handLineWidth - 2, 0, 2 * Math.PI);
-    cr.setSourceRGBA(0, 0, 0, 1);
+    cr.arc(centerX, centerY, minorLineWidth, 0, 2 * Math.PI);
+    cr.setSourceRGBA(0, 0, 0, 0.7);
     cr.fill();
 
     cr.$dispose();
