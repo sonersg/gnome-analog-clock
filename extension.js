@@ -121,12 +121,12 @@ export default class ExampleExtension extends Extension {
     // Define styling
     // const majorTickLength = 20; // longer for 12, 3, 6, 9
     // const minorTickLength = 10; // shorter for other hours
-    // const majorLineWidth = 8; // thicker
-    // const minorLineWidth = 4; // thinner
-    const majorTickLength = Math.ceil(baseRadius * 0.2); // longer for 12, 3, 6, 9
-    const minorTickLength = Math.ceil(baseRadius * 0.1); // shorter for other hours
-    const majorLineWidth = Math.ceil(baseRadius * 0.1); // thicker
-    const minorLineWidth = Math.ceil(baseRadius * 0.05); // thinner
+    // const majorTickWidth = 8; // thicker
+    // const minorTickWidth = 4; // thinner
+    const majorTickLength = Math.floor(baseRadius * 0.2); // longer for 12, 3, 6, 9
+    const minorTickLength = Math.floor(baseRadius * 0.1); // shorter for other hours
+    const majorTickWidth = Math.floor(baseRadius * 0.1); // thicker
+    const minorTickWidth = Math.floor(baseRadius * 0.05); // thinner
 
     // Optional: set color (e.g., white)
     // cr.setSourceRGBA(1, 1, 1, 1);
@@ -135,7 +135,7 @@ export default class ExampleExtension extends Extension {
     for (let i = 0; i < 12; i++) {
       const isMajor = i % 3 === 0; // 0, 3, 6, 9 → every 3rd hour
       const tickLength = isMajor ? majorTickLength : minorTickLength;
-      const lineWidth = isMajor ? majorLineWidth : minorLineWidth;
+      const lineWidth = isMajor ? majorTickWidth : minorTickWidth;
 
       // Start angle at 12 o’clock (which is -π/2), then go clockwise
       const angle = (i * Math.PI) / 6 - Math.PI / 2;
@@ -155,7 +155,6 @@ export default class ExampleExtension extends Extension {
     const hourHandLength = baseRadius - majorTickLength;
     const minuteHandLength = baseRadius;
     const secondHandLength = baseRadius;
-    const handLineWidth = majorLineWidth;
 
     const now = new Date();
     const hours = now.getHours() % 12;
@@ -169,18 +168,19 @@ export default class ExampleExtension extends Extension {
       centerX + hourHandLength * Math.cos(hourAngle),
       centerY + hourHandLength * Math.sin(hourAngle)
     );
-    cr.setLineWidth(handLineWidth);
+    cr.setLineWidth(majorTickWidth);
     cr.setSourceRGBA(1, 1, 1, 1);
     cr.stroke();
 
     // Minute hand
     const minAngle = (minutes + seconds / 60) * (Math.PI / 30) - Math.PI / 2;
+    const minuteHandwidth = Math.floor((majorTickWidth + minorTickWidth) / 2);
     cr.moveTo(centerX, centerY);
     cr.lineTo(
       centerX + minuteHandLength * Math.cos(minAngle),
       centerY + minuteHandLength * Math.sin(minAngle)
     );
-    cr.setLineWidth(handLineWidth * 0.9);
+    cr.setLineWidth(minuteHandwidth);
     cr.setSourceRGBA(1, 1, 1, 1);
     cr.stroke();
 
@@ -191,13 +191,13 @@ export default class ExampleExtension extends Extension {
       centerX + secondHandLength * Math.cos(secAngle),
       centerY + secondHandLength * Math.sin(secAngle)
     );
-    cr.setLineWidth(handLineWidth * 0.7);
+    cr.setLineWidth(minorTickWidth);
     cr.setSourceRGBA(1, 0, 0, 0.7);
     cr.stroke();
 
     // Center dot
     // cr.arc(x, y, radius, angle1, angle2)
-    cr.arc(centerX, centerY, minorLineWidth, 0, 2 * Math.PI);
+    cr.arc(centerX, centerY, minuteHandwidth, 0, 2 * Math.PI);
     cr.setSourceRGBA(0, 0, 0, 0.7);
     cr.fill();
 
