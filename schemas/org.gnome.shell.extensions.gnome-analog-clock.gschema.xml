@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.gnome-analog-clock" path="/org/gnome/shell/extensions/gnome-analog-clock/">
+    <key name="clock-size" type="i">
+      <default>220</default>
+      <summary>Clock size</summary>
+      <description>Clock size</description>
+    </key>
+    
+    <key name="clock-margin" type="i">
+      <default>100</default>
+      <summary>Clock margin</summary>
+      <description>Clock margin</description>
+    </key>
+
+    <key name="clock-position" type="i">
+      <default>2</default>
+      <summary>Clock position on the screen</summary>
+      <description>Clock position on the screen</description>
+    </key>
+    
+<!-- 
+    <key name="clock-tick-color" type="i">
+      <default>2</default>
+      <summary>Clock tick color</summary>
+      <description>Clock tick color</description>
+    </key> -->
+  </schema>
+</schemalist> 
+
+<!-- nix-shell -p glib --run "glib-compile-schemas ~/.local/share/gnome-shell/extensions/gnome-analog-clock@sonersg.com/schemas" -->
+
+<!-- nix-shell -p glib.dev --run "glib-compile-schemas ~/.local/share/gnome-shell/extensions/your-id/schemas" -->

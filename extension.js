@@ -32,33 +32,40 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import GLib from 'gi://GLib'; // ← Add this import to update time
 
-export default class ExampleExtension extends Extension {
+export default class AnalogClockExtension extends Extension {
   enable() {
+    this._settings = this.getSettings();
+    this._onSettingsChanged = this._onSettingsChanged.bind(this);
+
     const monitorWidth = Main.layoutManager.primaryMonitor.width;
     const monitorHeight = Main.layoutManager.primaryMonitor.height;
-    const clockSize = 222;
-    const margin = 99; // 100px, adjust as needed
+
+    // Get clock size in pixels from settings and make sure it is integer
+    const clockSize = Math.round(this._settings.get_int('clock-size'));
+
+    // Get clock margin in pixels from settings and make sure it is integer
+    const clockMargin = Math.round(this._settings.get_int('clock-margin'));
 
     const positions = [
-      { x: margin, y: margin }, // Top-left
-      { x: (monitorWidth - clockSize) / 2, y: margin }, // Top-center
-      { x: monitorWidth - clockSize - margin, y: margin }, // Top-right
+      { x: clockMargin, y: clockMargin }, // Top-left
+      { x: (monitorWidth - clockSize) / 2, y: clockMargin }, // Top-center
+      { x: monitorWidth - clockSize - clockMargin, y: clockMargin }, // Top-right
       // Center positions
-      { x: margin, y: (monitorHeight - clockSize) / 2 }, // Center-left
+      { x: clockMargin, y: (monitorHeight - clockSize) / 2 }, // Center-left
       { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 }, // Center
       {
-        x: monitorWidth - clockSize - margin,
+        x: monitorWidth - clockSize - clockMargin,
         y: (monitorHeight - clockSize) / 2,
       }, // Center-right
       // Bottom positions
-      { x: margin, y: monitorHeight - clockSize - margin }, // Bottom-left
+      { x: clockMargin, y: monitorHeight - clockSize - clockMargin }, // Bottom-left
       {
         x: (monitorWidth - clockSize) / 2,
-        y: monitorHeight - clockSize - margin,
+        y: monitorHeight - clockSize - clockMargin,
       }, // Bottom-center
       {
-        x: monitorWidth - clockSize - margin,
-        y: monitorHeight - clockSize - margin,
+        x: monitorWidth - clockSize - clockMargin,
+        y: monitorHeight - clockSize - clockMargin,
       }, // Bottom-right
     ];
 
@@ -70,6 +77,11 @@ export default class ExampleExtension extends Extension {
       reactive: false,
     });
 
+    this._settingsChangedId = this._settings.connect(
+      'changed',
+      this._onSettingsChanged
+    );
+
     this._desktopIcon.connect('repaint', this._onRepaint.bind(this));
 
     Main.layoutManager._backgroundGroup.add_child(this._desktopIcon);
@@ -79,38 +91,77 @@ export default class ExampleExtension extends Extension {
       this._desktopIcon.queue_repaint();
       return GLib.SOURCE_CONTINUE; // keep the timeout running
     });
-
-    // this._desktopIcon.connect('repaint', area => {
-    //   const cr = area.get_context();
-    //   const [width, height] = area.get_surface_size();
-    //   const centerX = width / 2;
-    //   const centerY = height / 2;
-    //   const radius = Math.min(width, height) / 2 - 10; // leave some margin
-    //   const tickLength = 22; // length of each tick mark
-    //   const lineWidth = 9;
-
-    //   cr.setLineWidth(lineWidth);
-    //   // Optional: set color (white in this example)
-    //   cr.setSourceRGBA(1, 1, 1, 1); // RGBA in 0–1 range
-
-    //   // Angles for 12, 3, 6, 9 o’clock in radians
-    //   const angles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
-
-    //   for (const angle of angles) {
-    //     const outerX = centerX + radius * Math.cos(angle);
-    //     const outerY = centerY + radius * Math.sin(angle);
-    //     const innerX = centerX + (radius - tickLength) * Math.cos(angle);
-    //     const innerY = centerY + (radius - tickLength) * Math.sin(angle);
-
-    //     cr.moveTo(innerX, innerY);
-    //     cr.lineTo(outerX, outerY);
-    //   }
-
-    //   cr.stroke();
-    //   cr.$dispose();
-    // });
   }
 
+  disable() {
+    // Cancel the timeout!
+    if (this._updateTimeout) {
+      GLib.source_remove(this._updateTimeout);
+      this._updateTimeout = null;
+    }
+
+    if (this._desktopIcon) {
+      Main.layoutManager._backgroundGroup.remove_child(this._desktopIcon);
+      this._desktopIcon.destroy();
+      this._desktopIcon = null;
+    }
+
+    if (this._settingsChangedId) {
+      this._settings.disconnect(this._settingsChangedId);
+      this._settingsChangedId = null;
+    }
+
+    this._settings = null;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // _onSettingsChanged function
+  /////////////////////////////////////////////////////////////////////////
+  _onSettingsChanged() {
+    if (!this._desktopIcon) return;
+
+    const monitorWidth = Main.layoutManager.primaryMonitor.width;
+    const monitorHeight = Main.layoutManager.primaryMonitor.height;
+    const clockSize = Math.round(this._settings.get_int('clock-size'));
+    const clockMargin = Math.round(this._settings.get_int('clock-margin'));
+
+    // Determine position index (e.g., always use top-right = index 2)
+    const posIndex = 2; // or read from a setting if dynamic
+
+    const positions = [
+      { x: clockMargin, y: clockMargin },
+      { x: (monitorWidth - clockSize) / 2, y: clockMargin },
+      { x: monitorWidth - clockSize - clockMargin, y: clockMargin },
+      { x: clockMargin, y: (monitorHeight - clockSize) / 2 },
+      { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 },
+      {
+        x: monitorWidth - clockSize - clockMargin,
+        y: (monitorHeight - clockSize) / 2,
+      },
+      { x: clockMargin, y: monitorHeight - clockSize - clockMargin },
+      {
+        x: (monitorWidth - clockSize) / 2,
+        y: monitorHeight - clockSize - clockMargin,
+      },
+      {
+        x: monitorWidth - clockSize - clockMargin,
+        y: monitorHeight - clockSize - clockMargin,
+      },
+    ];
+
+    const pos = positions[posIndex];
+
+    // Update position and size
+    this._desktopIcon.set_position(Math.round(pos.x), Math.round(pos.y));
+    this._desktopIcon.set_size(clockSize, clockSize);
+
+    // Request redraw to reflect new size/appearance
+    this._desktopIcon.queue_repaint();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // _onRepaint function
+  /////////////////////////////////////////////////////////////////////////
   _onRepaint(area) {
     const cr = area.get_context();
     const [width, height] = area.get_surface_size();
@@ -129,7 +180,7 @@ export default class ExampleExtension extends Extension {
     const minorTickWidth = Math.floor(baseRadius * 0.05); // thinner
 
     // Optional: set color (e.g., white)
-    // cr.setSourceRGBA(1, 1, 1, 1);
+    cr.setSourceRGBA(224 / 255, 94 / 255, 50 / 255, 1);
     // cr.setSourceRGBA(0, 0, 0, 0.5);
 
     for (let i = 0; i < 12; i++) {
@@ -202,19 +253,5 @@ export default class ExampleExtension extends Extension {
     cr.fill();
 
     cr.$dispose();
-  }
-
-  disable() {
-    // Cancel the timeout!
-    if (this._updateTimeout) {
-      GLib.source_remove(this._updateTimeout);
-      this._updateTimeout = null;
-    }
-
-    if (this._desktopIcon) {
-      Main.layoutManager._backgroundGroup.remove_child(this._desktopIcon);
-      this._desktopIcon.destroy();
-      this._desktopIcon = null;
-    }
   }
 }
