@@ -13,18 +13,27 @@
       <description>Clock margin</description>
     </key>
 
-    <key name="clock-position" type="i">
-      <default>2</default>
-      <summary>Clock position on the screen</summary>
-      <description>Clock position on the screen</description>
+    <key name="clock-position" type="s">
+      <default>"top-right"</default>
+      <choices>
+        <choice value="top-left"/>
+        <choice value="top-center"/>
+        <choice value="top-right"/>
+        <choice value="center-left"/>
+        <choice value="center"/>
+        <choice value="center-right"/>
+        <choice value="bottom-left"/>
+        <choice value="bottom-center"/>
+        <choice value="bottom-right"/>
+      </choices>
+      <summary>Clock position</summary>
     </key>
     
-<!-- 
-    <key name="clock-tick-color" type="i">
-      <default>2</default>
-      <summary>Clock tick color</summary>
-      <description>Clock tick color</description>
-    </key> -->
+    <key name="clock-ticks-color" type="s">
+       <default>"rgba(255, 255, 255, 1)"</default>
+       <summary>Clock ticks Color</summary>
+       <description>Color in rgba(r, g, b, a) format for Cairo.</description>
+    </key>
   </schema>
 </schemalist> 
 

@@ -1,32 +1,3 @@
-// import St from 'gi://St';
-// import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-// import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-
-// export default class ExampleExtension extends Extension {
-//   enable() {
-//     // Create a simple icon actor
-//     this._desktopIcon = new St.Icon({
-//       icon_name: 'face-laugh-symbolic',
-//       style_class: 'system-status-icon',
-//       icon_size: 222,
-//       x: 100, // position from left
-//       y: 100, // position from top
-//       reactive: true, // optional: allow interaction
-//     });
-
-//     // Add it above the desktop background but below windows
-//     Main.layoutManager._backgroundGroup.add_child(this._desktopIcon);
-//   }
-
-//   disable() {
-//     if (this._desktopIcon) {
-//       Main.layoutManager._backgroundGroup.remove_child(this._desktopIcon);
-//       this._desktopIcon.destroy();
-//       this._desktopIcon = null;
-//     }
-//   }
-// }
-
 import St from 'gi://St';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -126,7 +97,7 @@ export default class AnalogClockExtension extends Extension {
     const clockMargin = Math.round(this._settings.get_int('clock-margin'));
 
     // Determine position index (e.g., always use top-right = index 2)
-    const posIndex = 2; // or read from a setting if dynamic
+    const posIndex = this._getPositionIndex();
 
     const positions = [
       { x: clockMargin, y: clockMargin },
@@ -160,6 +131,61 @@ export default class AnalogClockExtension extends Extension {
   }
 
   /////////////////////////////////////////////////////////////////////////
+  // _parseRGBA function
+  /////////////////////////////////////////////////////////////////////////
+  _parseRGBA(colorStr) {
+    // Match rgba(r, g, b, a)
+    let match = colorStr.match(
+      /^rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)$/
+    );
+    if (match) {
+      // log(`[AnalogClock] match rgba "${colorStr}"`);
+      // journalctl --user -f -o cat | grep -i 'AnalogClock\|gnome-shell'
+      return {
+        r: parseInt(match[1]) / 255,
+        g: parseInt(match[2]) / 255,
+        b: parseInt(match[3]) / 255,
+        a: parseFloat(match[4]),
+      };
+    }
+
+    // Match rgb(r, g, b)
+    match = colorStr.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
+    if (match) {
+      // log(`[AnalogClock] match rgb "${colorStr}"`);
+      return {
+        r: parseInt(match[1]) / 255,
+        g: parseInt(match[2]) / 255,
+        b: parseInt(match[3]) / 255,
+        a: 1.0,
+      };
+    }
+
+    // Fallback (e.g., log error or use default)
+    // log(`[AnalogClock] Failed to parse color: "${colorStr}"`);
+    return { r: 0, g: 0, b: 1, a: 1 }; // blue fallback
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // _getPositionIndex function
+  /////////////////////////////////////////////////////////////////////////
+  _getPositionIndex() {
+    const posMap = {
+      'top-left': 0,
+      'top-center': 1,
+      'top-right': 2,
+      'center-left': 3,
+      center: 4,
+      'center-right': 5,
+      'bottom-left': 6,
+      'bottom-center': 7,
+      'bottom-right': 8,
+    };
+    const setting = this._settings.get_string('clock-position');
+    return posMap[setting] ?? 2; // fallback to top-right
+  }
+
+  /////////////////////////////////////////////////////////////////////////
   // _onRepaint function
   /////////////////////////////////////////////////////////////////////////
   _onRepaint(area) {
@@ -169,19 +195,17 @@ export default class AnalogClockExtension extends Extension {
     const centerY = height / 2;
     const baseRadius = Math.min(width, height) / 2 - 10; // leave some margin
 
-    // Define styling
-    // const majorTickLength = 20; // longer for 12, 3, 6, 9
-    // const minorTickLength = 10; // shorter for other hours
-    // const majorTickWidth = 8; // thicker
-    // const minorTickWidth = 4; // thinner
     const majorTickLength = Math.floor(baseRadius * 0.2); // longer for 12, 3, 6, 9
     const minorTickLength = Math.floor(baseRadius * 0.1); // shorter for other hours
     const majorTickWidth = Math.floor(baseRadius * 0.1); // thicker
     const minorTickWidth = Math.floor(baseRadius * 0.05); // thinner
 
-    // Optional: set color (e.g., white)
-    cr.setSourceRGBA(224 / 255, 94 / 255, 50 / 255, 1);
-    // cr.setSourceRGBA(0, 0, 0, 0.5);
+    // Get rgba color from settings, e.g. "rgba(255, 100, 50, 1)"
+    const colorStr = this._settings.get_string('clock-ticks-color');
+    // Parse rgba
+    const { r, g, b, a } = this._parseRGBA(colorStr);
+    // Set clock ticks color
+    cr.setSourceRGBA(r, g, b, a);
 
     for (let i = 0; i < 12; i++) {
       const isMajor = i % 3 === 0; // 0, 3, 6, 9 → every 3rd hour
@@ -249,7 +273,7 @@ export default class AnalogClockExtension extends Extension {
     // Center dot
     // cr.arc(x, y, radius, angle1, angle2)
     cr.arc(centerX, centerY, minuteHandwidth, 0, 2 * Math.PI);
-    cr.setSourceRGBA(0, 0, 0, 0.7);
+    cr.setSourceRGBA(r, g, b, a);
     cr.fill();
 
     cr.$dispose();

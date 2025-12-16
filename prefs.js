@@ -1,5 +1,6 @@
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk';
 
 import {
   ExtensionPreferences,
@@ -45,9 +46,19 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
       this.buildClockMarginSlider(
         settings,
         'clock-margin',
-        [5, 255, 5, 5],
+        [0, 255, 5, 5],
         _('Clock margin')
       )
+    );
+
+    // Add color picker for ticks color
+    box.append(
+      this.buildColorRow(settings, 'clock-ticks-color', _('Clock ticks color'))
+    );
+
+    // Add dropdown for clock position
+    box.append(
+      this.buildPositionRow(settings, 'clock-position', _('Clock position'))
     );
 
     return box;
@@ -197,4 +208,98 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
 
     return vbox;
   }
+
+  //////////////////////////////////////////////////
+  // buildColorRow function
+  //////////////////////////////////////////////////
+  buildColorRow(settings, key, labeltext) {
+    const row = new Adw.ActionRow({ title: labeltext });
+
+    const colorButton = new Gtk.ColorButton();
+    let rgba = new Gdk.RGBA();
+    rgba.parse(settings.get_string(key));
+    colorButton.set_rgba(rgba);
+    colorButton.set_use_alpha(true);
+
+    colorButton.connect('color-set', () => {
+      const rgba = colorButton.get_rgba();
+      const color = rgba.to_string(); // returns e.g. "rgba(255,255,255,1)"
+      // Convert to hex if you prefer (optional helper below)
+      // settings.set_string(key, this.rgbaToHex(rgba));
+      settings.set_string(key, color);
+    });
+
+    settings.connect(`changed::${key}`, () => {
+      rgba.parse(settings.get_string(key));
+      colorButton.set_rgba(rgba);
+    });
+
+    row.add_suffix(colorButton);
+    row.activatable_widget = colorButton;
+
+    return row;
+  }
+
+  //////////////////////////////////////////////////
+  // buildPositionRow function
+  //////////////////////////////////////////////////
+  buildPositionRow(settings, key, labeltext) {
+    const row = new Adw.ComboRow({
+      title: labeltext,
+      model: new Gtk.StringList({
+        strings: [
+          _('Top Left'),
+          _('Top Center'),
+          _('Top Right'),
+          _('Center Left'),
+          _('Center'),
+          _('Center Right'),
+          _('Bottom Left'),
+          _('Bottom Center'),
+          _('Bottom Right'),
+        ],
+      }),
+    });
+
+    // Map internal values ↔ displayed indices
+    const positionValues = [
+      'top-left',
+      'top-center',
+      'top-right',
+      'center-left',
+      'center',
+      'center-right',
+      'bottom-left',
+      'bottom-center',
+      'bottom-right',
+    ];
+
+    // Sync setting → UI
+    const updateUI = () => {
+      const value = settings.get_string(key);
+      const index = positionValues.indexOf(value);
+      if (index !== -1) row.selected = index;
+    };
+    updateUI();
+
+    // Sync UI → setting
+    row.connect('notify::selected', () => {
+      const index = row.selected;
+      if (index !== -1) settings.set_string(key, positionValues[index]);
+    });
+
+    // Update UI when changed externally
+    settings.connect(`changed::${key}`, updateUI);
+
+    return row;
+  }
+
+  // rgbaToHex(rgba) {
+  //   const r = Math.round(rgba.red * 255);
+  //   const g = Math.round(rgba.green * 255);
+  //   const b = Math.round(rgba.blue * 255);
+  //   return `#${r.toString(16).padStart(2, '0')}${g
+  //     .toString(16)
+  //     .padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  // }
 }
