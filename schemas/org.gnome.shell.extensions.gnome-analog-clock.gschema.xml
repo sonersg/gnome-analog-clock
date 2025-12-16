@@ -30,8 +30,20 @@
     </key>
     
     <key name="clock-ticks-color" type="s">
+       <default>"rgba(0, 0, 0, 1)"</default>
+       <summary>Clock ticks color</summary>
+       <description>Color in rgba(r, g, b, a) format for Cairo.</description>
+    </key>
+    
+    <key name="hour-minute-color" type="s">
        <default>"rgba(255, 255, 255, 1)"</default>
-       <summary>Clock ticks Color</summary>
+       <summary>Hour and minute hands color</summary>
+       <description>Color in rgba(r, g, b, a) format for Cairo.</description>
+    </key>
+    
+    <key name="second-color" type="s">
+       <default>"rgba(255, 0, 0, 1)"</default>
+       <summary>Second hand color</summary>
        <description>Color in rgba(r, g, b, a) format for Cairo.</description>
     </key>
   </schema>

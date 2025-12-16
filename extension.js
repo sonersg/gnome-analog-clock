@@ -201,11 +201,15 @@ export default class AnalogClockExtension extends Extension {
     const minorTickWidth = Math.floor(baseRadius * 0.05); // thinner
 
     // Get rgba color from settings, e.g. "rgba(255, 100, 50, 1)"
-    const colorStr = this._settings.get_string('clock-ticks-color');
+    const colorStrTicks = this._settings.get_string('clock-ticks-color');
+    const colorStrHourMinute = this._settings.get_string('hour-minute-color');
+    const colorStrSecond = this._settings.get_string('second-color');
     // Parse rgba
-    const { r, g, b, a } = this._parseRGBA(colorStr);
+    const pT = this._parseRGBA(colorStrTicks);
+    const pHM = this._parseRGBA(colorStrHourMinute);
+    const pS = this._parseRGBA(colorStrSecond);
     // Set clock ticks color
-    cr.setSourceRGBA(r, g, b, a);
+    cr.setSourceRGBA(pT.r, pT.g, pT.b, pT.a);
 
     for (let i = 0; i < 12; i++) {
       const isMajor = i % 3 === 0; // 0, 3, 6, 9 → every 3rd hour
@@ -244,7 +248,7 @@ export default class AnalogClockExtension extends Extension {
       centerY + hourHandLength * Math.sin(hourAngle)
     );
     cr.setLineWidth(majorTickWidth);
-    cr.setSourceRGBA(1, 1, 1, 1);
+    cr.setSourceRGBA(pHM.r, pHM.g, pHM.b, pHM.a);
     cr.stroke();
 
     // Minute hand
@@ -256,7 +260,7 @@ export default class AnalogClockExtension extends Extension {
       centerY + minuteHandLength * Math.sin(minAngle)
     );
     cr.setLineWidth(minuteHandwidth);
-    cr.setSourceRGBA(1, 1, 1, 1);
+    cr.setSourceRGBA(pHM.r, pHM.g, pHM.b, pHM.a);
     cr.stroke();
 
     // Second hand
@@ -267,13 +271,13 @@ export default class AnalogClockExtension extends Extension {
       centerY + secondHandLength * Math.sin(secAngle)
     );
     cr.setLineWidth(minorTickWidth);
-    cr.setSourceRGBA(1, 0, 0, 0.7);
+    cr.setSourceRGBA(pS.r, pS.g, pS.b, pS.a);
     cr.stroke();
 
     // Center dot
     // cr.arc(x, y, radius, angle1, angle2)
     cr.arc(centerX, centerY, minuteHandwidth, 0, 2 * Math.PI);
-    cr.setSourceRGBA(r, g, b, a);
+    cr.setSourceRGBA(pT.r, pT.g, pT.b, pT.a);
     cr.fill();
 
     cr.$dispose();

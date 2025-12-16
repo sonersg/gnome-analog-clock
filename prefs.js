@@ -28,7 +28,7 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
       'margin-bottom': 20,
       'margin-start': 20,
       'margin-end': 20,
-      spacing: 16,
+      spacing: 22,
     });
 
     // Add slider for clock size
@@ -37,7 +37,7 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
         settings,
         'clock-size',
         [200, 660, 10, 10],
-        _('Clock size')
+        _('Clock size:')
       )
     );
 
@@ -47,18 +47,40 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
         settings,
         'clock-margin',
         [0, 255, 5, 5],
-        _('Clock margin')
+        _('Clock margin:')
       )
-    );
-
-    // Add color picker for ticks color
-    box.append(
-      this.buildColorRow(settings, 'clock-ticks-color', _('Clock ticks color'))
     );
 
     // Add dropdown for clock position
     box.append(
-      this.buildPositionRow(settings, 'clock-position', _('Clock position'))
+      this.buildPositionRow(settings, 'clock-position', _('Clock position:'))
+    );
+
+    // Add color picker for clock ticks
+    box.append(
+      this.buildTicksColorRow(
+        settings,
+        'clock-ticks-color',
+        _('Clock ticks color:')
+      )
+    );
+
+    // Add color picker for hour and minute hands
+    box.append(
+      this.buildHourMinuteColorRow(
+        settings,
+        'hour-minute-color',
+        _('Hour, minute hands color:')
+      )
+    );
+
+    // Add color picker for second hand
+    box.append(
+      this.buildSecondColorRow(
+        settings,
+        'second-color',
+        _('Second hand color:')
+      )
     );
 
     return box;
@@ -210,9 +232,71 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   }
 
   //////////////////////////////////////////////////
-  // buildColorRow function
+  // buildTicksColorRow function
   //////////////////////////////////////////////////
-  buildColorRow(settings, key, labeltext) {
+  buildTicksColorRow(settings, key, labeltext) {
+    const row = new Adw.ActionRow({ title: labeltext });
+
+    const colorButton = new Gtk.ColorButton();
+    let rgba = new Gdk.RGBA();
+    rgba.parse(settings.get_string(key));
+    colorButton.set_rgba(rgba);
+    colorButton.set_use_alpha(true);
+
+    colorButton.connect('color-set', () => {
+      const rgba = colorButton.get_rgba();
+      const color = rgba.to_string(); // returns e.g. "rgba(255,255,255,1)"
+      // Convert to hex if you prefer (optional helper below)
+      // settings.set_string(key, this.rgbaToHex(rgba));
+      settings.set_string(key, color);
+    });
+
+    settings.connect(`changed::${key}`, () => {
+      rgba.parse(settings.get_string(key));
+      colorButton.set_rgba(rgba);
+    });
+
+    row.add_suffix(colorButton);
+    row.activatable_widget = colorButton;
+
+    return row;
+  }
+
+  //////////////////////////////////////////////////
+  // buildHourMinuteColorRow function
+  //////////////////////////////////////////////////
+  buildHourMinuteColorRow(settings, key, labeltext) {
+    const row = new Adw.ActionRow({ title: labeltext });
+
+    const colorButton = new Gtk.ColorButton();
+    let rgba = new Gdk.RGBA();
+    rgba.parse(settings.get_string(key));
+    colorButton.set_rgba(rgba);
+    colorButton.set_use_alpha(true);
+
+    colorButton.connect('color-set', () => {
+      const rgba = colorButton.get_rgba();
+      const color = rgba.to_string(); // returns e.g. "rgba(255,255,255,1)"
+      // Convert to hex if you prefer (optional helper below)
+      // settings.set_string(key, this.rgbaToHex(rgba));
+      settings.set_string(key, color);
+    });
+
+    settings.connect(`changed::${key}`, () => {
+      rgba.parse(settings.get_string(key));
+      colorButton.set_rgba(rgba);
+    });
+
+    row.add_suffix(colorButton);
+    row.activatable_widget = colorButton;
+
+    return row;
+  }
+
+  //////////////////////////////////////////////////
+  // buildSecondColorRow function
+  //////////////////////////////////////////////////
+  buildSecondColorRow(settings, key, labeltext) {
     const row = new Adw.ActionRow({ title: labeltext });
 
     const colorButton = new Gtk.ColorButton();
@@ -244,24 +328,19 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   // buildPositionRow function
   //////////////////////////////////////////////////
   buildPositionRow(settings, key, labeltext) {
-    const row = new Adw.ComboRow({
-      title: labeltext,
-      model: new Gtk.StringList({
-        strings: [
-          _('Top Left'),
-          _('Top Center'),
-          _('Top Right'),
-          _('Center Left'),
-          _('Center'),
-          _('Center Right'),
-          _('Bottom Left'),
-          _('Bottom Center'),
-          _('Bottom Right'),
-        ],
-      }),
-    });
-
-    // Map internal values ↔ displayed indices
+    // Create string list manually (compatible with older GJS)
+    const stringList = new Gtk.StringList();
+    const displayLabels = [
+      _('Top Left'),
+      _('Top Center'),
+      _('Top Right'),
+      _('Center Left'),
+      _('Center'),
+      _('Center Right'),
+      _('Bottom Left'),
+      _('Bottom Center'),
+      _('Bottom Right'),
+    ];
     const positionValues = [
       'top-left',
       'top-center',
@@ -274,21 +353,32 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
       'bottom-right',
     ];
 
+    displayLabels.forEach(label => stringList.append(label));
+
+    const row = new Adw.ComboRow({
+      title: labeltext,
+      model: stringList,
+    });
+
     // Sync setting → UI
     const updateUI = () => {
       const value = settings.get_string(key);
       const index = positionValues.indexOf(value);
-      if (index !== -1) row.selected = index;
+      if (index !== -1) {
+        row.selected = index;
+      }
     };
     updateUI();
 
     // Sync UI → setting
     row.connect('notify::selected', () => {
-      const index = row.selected;
-      if (index !== -1) settings.set_string(key, positionValues[index]);
+      const idx = row.selected;
+      if (idx >= 0 && idx < positionValues.length) {
+        settings.set_string(key, positionValues[idx]);
+      }
     });
 
-    // Update UI when changed externally
+    // Handle external changes
     settings.connect(`changed::${key}`, updateUI);
 
     return row;
