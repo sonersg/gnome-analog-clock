@@ -195,7 +195,7 @@ export default class AnalogClockExtension extends Extension {
     const centerY = height / 2;
     const baseRadius = Math.min(width, height) / 2 - 10; // leave some margin
 
-    const majorTickLength = Math.floor(baseRadius * 0.2); // longer for 12, 3, 6, 9
+    const majorTickLength = Math.floor(baseRadius * 0.3); // longer for 12, 3, 6, 9
     const minorTickLength = Math.floor(baseRadius * 0.1); // shorter for other hours
     const majorTickWidth = Math.floor(baseRadius * 0.1); // thicker
     const minorTickWidth = Math.floor(baseRadius * 0.05); // thinner
@@ -253,13 +253,12 @@ export default class AnalogClockExtension extends Extension {
 
     // Minute hand
     const minAngle = (minutes + seconds / 60) * (Math.PI / 30) - Math.PI / 2;
-    const minuteHandwidth = Math.floor((majorTickWidth + minorTickWidth) / 2);
     cr.moveTo(centerX, centerY);
     cr.lineTo(
       centerX + minuteHandLength * Math.cos(minAngle),
       centerY + minuteHandLength * Math.sin(minAngle)
     );
-    cr.setLineWidth(minuteHandwidth);
+    cr.setLineWidth(minorTickWidth);
     cr.setSourceRGBA(pHM.r, pHM.g, pHM.b, pHM.a);
     cr.stroke();
 
@@ -270,13 +269,13 @@ export default class AnalogClockExtension extends Extension {
       centerX + secondHandLength * Math.cos(secAngle),
       centerY + secondHandLength * Math.sin(secAngle)
     );
-    cr.setLineWidth(minorTickWidth);
+    cr.setLineWidth(minorTickWidth * 0.9);
     cr.setSourceRGBA(pS.r, pS.g, pS.b, pS.a);
     cr.stroke();
 
     // Center dot
     // cr.arc(x, y, radius, angle1, angle2)
-    cr.arc(centerX, centerY, minuteHandwidth, 0, 2 * Math.PI);
+    cr.arc(centerX, centerY, minorTickWidth, 0, 2 * Math.PI);
     cr.setSourceRGBA(pT.r, pT.g, pT.b, pT.a);
     cr.fill();
 

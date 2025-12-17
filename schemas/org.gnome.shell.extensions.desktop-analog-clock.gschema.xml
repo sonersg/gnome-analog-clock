@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.gnome-analog-clock" path="/org/gnome/shell/extensions/gnome-analog-clock/">
+  <schema id="org.gnome.shell.extensions.desktop-analog-clock" path="/org/gnome/shell/extensions/desktop-analog-clock/">
     <key name="clock-size" type="i">
       <default>220</default>
       <summary>Clock size</summary>
@@ -14,19 +14,9 @@
     </key>
 
     <key name="clock-position" type="s">
-      <default>"top-right"</default>
-      <choices>
-        <choice value="top-left"/>
-        <choice value="top-center"/>
-        <choice value="top-right"/>
-        <choice value="center-left"/>
-        <choice value="center"/>
-        <choice value="center-right"/>
-        <choice value="bottom-left"/>
-        <choice value="bottom-center"/>
-        <choice value="bottom-right"/>
-      </choices>
-      <summary>Clock position</summary>
+      <default>"Top right"</default>
+      <summary>Select clock position</summary>
+      <description>Select clock position from dropdown</description>
     </key>
     
     <key name="clock-ticks-color" type="s">
@@ -50,5 +40,3 @@
 </schemalist> 
 
 <!-- nix-shell -p glib --run "glib-compile-schemas ~/.local/share/gnome-shell/extensions/gnome-analog-clock@sonersg.com/schemas" -->
-
-<!-- nix-shell -p glib.dev --run "glib-compile-schemas ~/.local/share/gnome-shell/extensions/your-id/schemas" -->

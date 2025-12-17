@@ -53,7 +53,11 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
 
     // Add dropdown for clock position
     box.append(
-      this.buildPositionRow(settings, 'clock-position', _('Clock position:'))
+      this.buildClockPositionRow(
+        settings,
+        'clock-position',
+        _('Clock position:')
+      )
     );
 
     // Add color picker for clock ticks
@@ -325,63 +329,58 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   }
 
   //////////////////////////////////////////////////
-  // buildPositionRow function
+  // buildClockPositionRow function
   //////////////////////////////////////////////////
-  buildPositionRow(settings, key, labeltext) {
-    // Create string list manually (compatible with older GJS)
-    const stringList = new Gtk.StringList();
-    const displayLabels = [
-      _('Top Left'),
-      _('Top Center'),
-      _('Top Right'),
-      _('Center Left'),
-      _('Center'),
-      _('Center Right'),
-      _('Bottom Left'),
-      _('Bottom Center'),
-      _('Bottom Right'),
-    ];
-    const positionValues = [
-      'top-left',
-      'top-center',
-      'top-right',
-      'center-left',
-      'center',
-      'center-right',
-      'bottom-left',
-      'bottom-center',
-      'bottom-right',
-    ];
+  buildClockPositionRow(settings, key, labeltext) {
+    // Create the StringList model with your options
+    const model = new Gtk.StringList();
+    model.append('Top left');
+    model.append('Top center');
+    model.append('Top right');
+    model.append('Middle left');
+    model.append('Middle center');
+    model.append('Middle right');
 
-    displayLabels.forEach(label => stringList.append(label));
-
-    const row = new Adw.ComboRow({
+    // Create the ComboRow (dropdown)
+    const animalRow = new Adw.ComboRow({
       title: labeltext,
-      model: stringList,
+      // subtitle: 'Select from the list',
+      model: model,
     });
 
-    // Sync setting → UI
-    const updateUI = () => {
-      const value = settings.get_string(key);
-      const index = positionValues.indexOf(value);
-      if (index !== -1) {
-        row.selected = index;
-      }
+    // Create mapping: string -> index and index -> string
+    const strToIndex = {
+      'Top left': 0,
+      'Top center': 1,
+      'Top right': 2,
+      'Middle left': 3,
+      'Middle center': 4,
+      'Middle right': 5,
     };
-    updateUI();
 
-    // Sync UI → setting
-    row.connect('notify::selected', () => {
-      const idx = row.selected;
-      if (idx >= 0 && idx < positionValues.length) {
-        settings.set_string(key, positionValues[idx]);
-      }
+    const indexToString = {
+      0: 'Top left',
+      1: 'Top center',
+      2: 'Top right',
+      3: 'Middle left',
+      4: 'Middle center',
+      5: 'Middle right',
+    };
+
+    // Set initial selection from saved settings
+    const currentAnimal = settings.get_string(key);
+    if (currentAnimal in strToIndex) {
+      animalRow.selected = strToIndex[currentAnimal];
+    }
+
+    // Save to settings when user changes selection
+    animalRow.connect('notify::selected', () => {
+      const selectedIndex = animalRow.selected;
+      const selectedAnimal = indexToString[selectedIndex];
+      settings.set_string(key, selectedAnimal);
     });
 
-    // Handle external changes
-    settings.connect(`changed::${key}`, updateUI);
-
-    return row;
+    return animalRow;
   }
 
   // rgbaToHex(rgba) {
