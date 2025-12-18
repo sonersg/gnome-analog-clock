@@ -7,6 +7,8 @@ export default class AnalogClockExtension extends Extension {
   enable() {
     this._settings = this.getSettings();
     this._onSettingsChanged = this._onSettingsChanged.bind(this);
+    this._posIndex = this._settings.get_int('clock-position') ?? 2;
+    this._hideTicks = this._settings.get_boolean('hide-ticks');
 
     const monitorWidth = Main.layoutManager.primaryMonitor.width;
     const monitorHeight = Main.layoutManager.primaryMonitor.height;
@@ -18,31 +20,34 @@ export default class AnalogClockExtension extends Extension {
     const clockMargin = Math.round(this._settings.get_int('clock-margin'));
 
     const positions = [
-      { x: clockMargin, y: clockMargin }, // Top-left
-      { x: (monitorWidth - clockSize) / 2, y: clockMargin }, // Top-center
-      { x: monitorWidth - clockSize - clockMargin, y: clockMargin }, // Top-right
+      { x: clockMargin, y: clockMargin }, // Top left
+      { x: (monitorWidth - clockSize) / 2, y: clockMargin }, // Top center
+      { x: monitorWidth - clockSize - clockMargin, y: clockMargin }, // Top right
       // Center positions
-      { x: clockMargin, y: (monitorHeight - clockSize) / 2 }, // Center-left
-      { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 }, // Center
+      { x: clockMargin, y: (monitorHeight - clockSize) / 2 }, // Middle left
+      { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 }, // Middle center
       {
         x: monitorWidth - clockSize - clockMargin,
         y: (monitorHeight - clockSize) / 2,
-      }, // Center-right
+      }, // Middle right
       // Bottom positions
-      { x: clockMargin, y: monitorHeight - clockSize - clockMargin }, // Bottom-left
+      { x: clockMargin, y: monitorHeight - clockSize - clockMargin }, // Bottom left
       {
         x: (monitorWidth - clockSize) / 2,
         y: monitorHeight - clockSize - clockMargin,
-      }, // Bottom-center
+      }, // Bottom center
       {
         x: monitorWidth - clockSize - clockMargin,
         y: monitorHeight - clockSize - clockMargin,
-      }, // Bottom-right
+      }, // Bottom right
     ];
 
+    // Determine position index (e.g., always use top-right = index 2)
+    // const posIndex = this._settings.get_int('clock-position') ?? 2;
+
     this._desktopIcon = new St.DrawingArea({
-      x: positions[2].x,
-      y: positions[2].y,
+      x: positions[this._posIndex].x,
+      y: positions[this._posIndex].y,
       width: clockSize,
       height: clockSize,
       reactive: false,
@@ -93,11 +98,13 @@ export default class AnalogClockExtension extends Extension {
 
     const monitorWidth = Main.layoutManager.primaryMonitor.width;
     const monitorHeight = Main.layoutManager.primaryMonitor.height;
+
     const clockSize = Math.round(this._settings.get_int('clock-size'));
     const clockMargin = Math.round(this._settings.get_int('clock-margin'));
 
     // Determine position index (e.g., always use top-right = index 2)
-    const posIndex = this._getPositionIndex();
+    this._posIndex = this._settings.get_int('clock-position') ?? 2;
+    this._hideTicks = this._settings.get_boolean('hide-ticks');
 
     const positions = [
       { x: clockMargin, y: clockMargin },
@@ -120,7 +127,7 @@ export default class AnalogClockExtension extends Extension {
       },
     ];
 
-    const pos = positions[posIndex];
+    const pos = positions[this._posIndex];
 
     // Update position and size
     this._desktopIcon.set_position(Math.round(pos.x), Math.round(pos.y));
@@ -167,25 +174,6 @@ export default class AnalogClockExtension extends Extension {
   }
 
   /////////////////////////////////////////////////////////////////////////
-  // _getPositionIndex function
-  /////////////////////////////////////////////////////////////////////////
-  _getPositionIndex() {
-    const posMap = {
-      'top-left': 0,
-      'top-center': 1,
-      'top-right': 2,
-      'center-left': 3,
-      center: 4,
-      'center-right': 5,
-      'bottom-left': 6,
-      'bottom-center': 7,
-      'bottom-right': 8,
-    };
-    const setting = this._settings.get_string('clock-position');
-    return posMap[setting] ?? 2; // fallback to top-right
-  }
-
-  /////////////////////////////////////////////////////////////////////////
   // _onRepaint function
   /////////////////////////////////////////////////////////////////////////
   _onRepaint(area) {
@@ -200,34 +188,30 @@ export default class AnalogClockExtension extends Extension {
     const majorTickWidth = Math.floor(baseRadius * 0.1); // thicker
     const minorTickWidth = Math.floor(baseRadius * 0.05); // thinner
 
-    // Get rgba color from settings, e.g. "rgba(255, 100, 50, 1)"
-    const colorStrTicks = this._settings.get_string('clock-ticks-color');
-    const colorStrHourMinute = this._settings.get_string('hour-minute-color');
-    const colorStrSecond = this._settings.get_string('second-color');
-    // Parse rgba
-    const pT = this._parseRGBA(colorStrTicks);
-    const pHM = this._parseRGBA(colorStrHourMinute);
-    const pS = this._parseRGBA(colorStrSecond);
-    // Set clock ticks color
-    cr.setSourceRGBA(pT.r, pT.g, pT.b, pT.a);
+    if (!this._hideTicks) {
+      const colorStrTicks = this._settings.get_string('clock-ticks-color');
+      const pT = this._parseRGBA(colorStrTicks);
+      // Set clock ticks color
+      cr.setSourceRGBA(pT.r, pT.g, pT.b, pT.a);
 
-    for (let i = 0; i < 12; i++) {
-      const isMajor = i % 3 === 0; // 0, 3, 6, 9 → every 3rd hour
-      const tickLength = isMajor ? majorTickLength : minorTickLength;
-      const lineWidth = isMajor ? majorTickWidth : minorTickWidth;
+      for (let i = 0; i < 12; i++) {
+        const isMajor = i % 3 === 0; // 0, 3, 6, 9 → every 3rd hour
+        const tickLength = isMajor ? majorTickLength : minorTickLength;
+        const lineWidth = isMajor ? majorTickWidth : minorTickWidth;
 
-      // Start angle at 12 o’clock (which is -π/2), then go clockwise
-      const angle = (i * Math.PI) / 6 - Math.PI / 2;
+        // Start angle at 12 o’clock (which is -π/2), then go clockwise
+        const angle = (i * Math.PI) / 6 - Math.PI / 2;
 
-      const outerX = centerX + baseRadius * Math.cos(angle);
-      const outerY = centerY + baseRadius * Math.sin(angle);
-      const innerX = centerX + (baseRadius - tickLength) * Math.cos(angle);
-      const innerY = centerY + (baseRadius - tickLength) * Math.sin(angle);
+        const outerX = centerX + baseRadius * Math.cos(angle);
+        const outerY = centerY + baseRadius * Math.sin(angle);
+        const innerX = centerX + (baseRadius - tickLength) * Math.cos(angle);
+        const innerY = centerY + (baseRadius - tickLength) * Math.sin(angle);
 
-      cr.setLineWidth(lineWidth);
-      cr.moveTo(innerX, innerY);
-      cr.lineTo(outerX, outerY);
-      cr.stroke(); // stroke immediately so line width applies per tick
+        cr.setLineWidth(lineWidth);
+        cr.moveTo(innerX, innerY);
+        cr.lineTo(outerX, outerY);
+        cr.stroke(); // stroke immediately so line width applies per tick
+      }
     }
 
     // Draw clock hands
@@ -239,6 +223,11 @@ export default class AnalogClockExtension extends Extension {
     const hours = now.getHours() % 12;
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
+
+    // Get rgba color from settings, e.g. "rgba(255, 100, 50, 1)"
+    const colorStrHourMinute = this._settings.get_string('hour-minute-color');
+    // Parse rgba
+    const pHM = this._parseRGBA(colorStrHourMinute);
 
     // Hour hand
     const hourAngle = (hours + minutes / 60) * (Math.PI / 6) - Math.PI / 2;
@@ -262,22 +251,30 @@ export default class AnalogClockExtension extends Extension {
     cr.setSourceRGBA(pHM.r, pHM.g, pHM.b, pHM.a);
     cr.stroke();
 
-    // Second hand
-    const secAngle = seconds * (Math.PI / 30) - Math.PI / 2;
-    cr.moveTo(centerX, centerY);
-    cr.lineTo(
-      centerX + secondHandLength * Math.cos(secAngle),
-      centerY + secondHandLength * Math.sin(secAngle)
-    );
-    cr.setLineWidth(minorTickWidth * 0.9);
-    cr.setSourceRGBA(pS.r, pS.g, pS.b, pS.a);
-    cr.stroke();
+    if (!this._hideTicks) {
+      // Second hand
+      const colorStrSecond = this._settings.get_string('second-color');
+      const pS = this._parseRGBA(colorStrSecond);
+      const colorStrTicks = this._settings.get_string('clock-ticks-color');
+      const pT = this._parseRGBA(colorStrTicks);
 
-    // Center dot
-    // cr.arc(x, y, radius, angle1, angle2)
-    cr.arc(centerX, centerY, minorTickWidth, 0, 2 * Math.PI);
-    cr.setSourceRGBA(pT.r, pT.g, pT.b, pT.a);
-    cr.fill();
+      const secAngle = seconds * (Math.PI / 30) - Math.PI / 2;
+
+      cr.moveTo(centerX, centerY);
+      cr.lineTo(
+        centerX + secondHandLength * Math.cos(secAngle),
+        centerY + secondHandLength * Math.sin(secAngle)
+      );
+      cr.setLineWidth(minorTickWidth * 0.9);
+      cr.setSourceRGBA(pS.r, pS.g, pS.b, pS.a);
+      cr.stroke();
+
+      // Center dot
+      // cr.arc(x, y, radius, angle1, angle2)
+      cr.arc(centerX, centerY, minorTickWidth, 0, 2 * Math.PI);
+      cr.setSourceRGBA(pT.r, pT.g, pT.b, pT.a);
+      cr.fill();
+    }
 
     cr.$dispose();
   }

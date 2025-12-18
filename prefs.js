@@ -1,6 +1,7 @@
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
+import Gio from 'gi://Gio';
 
 import {
   ExtensionPreferences,
@@ -17,6 +18,7 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
     group.add(this.buildPrefsWidget());
     page.add(group);
     window.add(page);
+    window.set_default_size(500, 700);
   }
 
   buildPrefsWidget() {
@@ -46,7 +48,7 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
       this.buildClockMarginSlider(
         settings,
         'clock-margin',
-        [0, 255, 5, 5],
+        [5, 255, 5, 5],
         _('Clock margin:')
       )
     );
@@ -60,21 +62,21 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
       )
     );
 
-    // Add color picker for clock ticks
-    box.append(
-      this.buildTicksColorRow(
-        settings,
-        'clock-ticks-color',
-        _('Clock ticks color:')
-      )
-    );
-
     // Add color picker for hour and minute hands
     box.append(
       this.buildHourMinuteColorRow(
         settings,
         'hour-minute-color',
         _('Hour, minute hands color:')
+      )
+    );
+
+    // Add toggle for hiding clock ticks
+    box.append(
+      this.buildToggle(
+        settings,
+        'hide-ticks',
+        _('Show only hour and minute hands:')
       )
     );
 
@@ -87,9 +89,21 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
       )
     );
 
+    // Add color picker for clock ticks
+    box.append(
+      this.buildTicksColorRow(
+        settings,
+        'clock-ticks-color',
+        _('Clock ticks color:')
+      )
+    );
+
     return box;
   }
 
+  //////////////////////////////////////////////////
+  // buildClockSizeSlider function
+  //////////////////////////////////////////////////
   buildClockSizeSlider(settings, key, values, labeltext) {
     let [lower, upper, step, page] = values;
     let vbox = new Gtk.Box({
@@ -236,34 +250,137 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   }
 
   //////////////////////////////////////////////////
-  // buildTicksColorRow function
+  // buildClockPositionRow function, EXPECTS STRING KEY, NOT INTEGER
   //////////////////////////////////////////////////
-  buildTicksColorRow(settings, key, labeltext) {
-    const row = new Adw.ActionRow({ title: labeltext });
+  // buildClockPositionRow(settings, key, labeltext) {
+  //   // Create a container box to hold everything
+  //   const container = new Gtk.Box({
+  //     orientation: Gtk.Orientation.HORIZONTAL,
+  //     spacing: 10,
+  //   });
 
-    const colorButton = new Gtk.ColorButton();
-    let rgba = new Gdk.RGBA();
-    rgba.parse(settings.get_string(key));
-    colorButton.set_rgba(rgba);
-    colorButton.set_use_alpha(true);
+  //   // Create label
+  //   const label = new Gtk.Label({
+  //     label: labeltext,
+  //     halign: Gtk.Align.START,
+  //     xalign: 0,
+  //     wrap: true,
+  //   });
+  //   container.append(label);
 
-    colorButton.connect('color-set', () => {
-      const rgba = colorButton.get_rgba();
-      const color = rgba.to_string(); // returns e.g. "rgba(255,255,255,1)"
-      // Convert to hex if you prefer (optional helper below)
-      // settings.set_string(key, this.rgbaToHex(rgba));
-      settings.set_string(key, color);
+  //   // Create the StringList model with your options
+  //   const model = new Gtk.StringList();
+  //   const options = [
+  //     'Top left',
+  //     'Top center',
+  //     'Top right',
+  //     'Middle left',
+  //     'Middle center',
+  //     'Middle right',
+  //   ];
+
+  //   options.forEach(option => model.append(option));
+
+  //   // Create the dropdown (Gtk.DropDown instead of Adw.ComboRow)
+  //   const dropdown = new Gtk.DropDown({
+  //     model: model,
+  //     hexpand: true,
+  //   });
+
+  //   // Create mapping between string values and indices
+  //   const strToIndex = {};
+  //   const indexToString = {};
+
+  //   options.forEach((option, index) => {
+  //     strToIndex[option] = index;
+  //     indexToString[index] = option;
+  //   });
+
+  //   // Set initial selection from saved settings
+  //   const currentPosition = settings.get_string(key);
+  //   if (currentPosition in strToIndex) {
+  //     dropdown.selected = strToIndex[currentPosition];
+  //   }
+
+  //   // Save to settings when user changes selection
+  //   dropdown.connect('notify::selected', () => {
+  //     const selectedIndex = dropdown.selected;
+  //     const selectedPosition = indexToString[selectedIndex];
+  //     settings.set_string(key, selectedPosition);
+  //   });
+
+  //   // Update dropdown when settings change externally
+  //   settings.connect(`changed::${key}`, () => {
+  //     const newPosition = settings.get_string(key);
+  //     if (newPosition in strToIndex) {
+  //       dropdown.selected = strToIndex[newPosition];
+  //     }
+  //   });
+
+  //   container.append(dropdown);
+  //   return container;
+  // }
+
+  //////////////////////////////////////////////////
+  // buildClockPositionRow function - USING Adw.ComboRow
+  //////////////////////////////////////////////////
+  buildClockPositionRow(settings, key, labeltext) {
+    // Create a PreferencesGroup for the dropdown
+    const group = new Adw.PreferencesGroup();
+
+    // Create the StringList model with your options
+    const model = new Gtk.StringList();
+    const options = [
+      'Top left',
+      'Top center',
+      'Top right',
+      'Middle left',
+      'Middle center',
+      'Middle right',
+      'Bottom left',
+      'Bottom center',
+      'Bottom right',
+    ];
+
+    options.forEach(option => model.append(option));
+
+    // Create the ComboRow
+    const comboRow = new Adw.ComboRow({
+      title: labeltext,
+      model: model,
     });
 
+    // Create mapping between string values and indices
+    const indexToString = {};
+
+    options.forEach((option, index) => (indexToString[index] = option));
+
+    // log(`[AnalogClock] \nstrToIndex: "${strToIndex}"`);
+    // journalctl --user -f -o cat | grep -i 'AnalogClock\|gnome-shell'
+
+    // Set initial selection from saved settings
+    const currentPosition = settings.get_int(key);
+    if (currentPosition in indexToString) {
+      comboRow.selected = currentPosition;
+    }
+
+    // Save to settings when user changes selection
+    comboRow.connect('notify::selected', () => {
+      const selectedIndex = comboRow.selected;
+      settings.set_int(key, selectedIndex);
+    });
+
+    // Update dropdown when settings change externally
     settings.connect(`changed::${key}`, () => {
-      rgba.parse(settings.get_string(key));
-      colorButton.set_rgba(rgba);
+      const newPositionIndex = settings.get_int(key);
+      if (newPositionIndex in indexToString) {
+        comboRow.selected = newPositionIndex;
+      }
     });
 
-    row.add_suffix(colorButton);
-    row.activatable_widget = colorButton;
+    group.add(comboRow);
 
-    return row;
+    return group;
   }
 
   //////////////////////////////////////////////////
@@ -298,6 +415,43 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   }
 
   //////////////////////////////////////////////////
+  // buildToggle function
+  //////////////////////////////////////////////////
+  buildToggle(settings, key, labeltext) {
+    let hbox = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 10,
+    });
+
+    let label = new Gtk.Label({
+      label: labeltext,
+      halign: Gtk.Align.START,
+      hexpand: true,
+      wrap: true,
+      xalign: 0,
+    });
+
+    let toggle = new Gtk.Switch({
+      halign: Gtk.Align.END,
+      valign: Gtk.Align.CENTER,
+    });
+
+    // Add tooltip for accessibility
+    toggle.set_tooltip_text(
+      _(
+        'Toggle whether to apply transparency to all windows or just inactive ones'
+      )
+    );
+
+    settings.bind(key, toggle, 'active', Gio.SettingsBindFlags.DEFAULT);
+
+    hbox.append(label);
+    hbox.append(toggle);
+
+    return hbox;
+  }
+
+  //////////////////////////////////////////////////
   // buildSecondColorRow function
   //////////////////////////////////////////////////
   buildSecondColorRow(settings, key, labeltext) {
@@ -329,58 +483,34 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   }
 
   //////////////////////////////////////////////////
-  // buildClockPositionRow function
+  // buildTicksColorRow function
   //////////////////////////////////////////////////
-  buildClockPositionRow(settings, key, labeltext) {
-    // Create the StringList model with your options
-    const model = new Gtk.StringList();
-    model.append('Top left');
-    model.append('Top center');
-    model.append('Top right');
-    model.append('Middle left');
-    model.append('Middle center');
-    model.append('Middle right');
+  buildTicksColorRow(settings, key, labeltext) {
+    const row = new Adw.ActionRow({ title: labeltext });
 
-    // Create the ComboRow (dropdown)
-    const animalRow = new Adw.ComboRow({
-      title: labeltext,
-      // subtitle: 'Select from the list',
-      model: model,
+    const colorButton = new Gtk.ColorButton();
+    let rgba = new Gdk.RGBA();
+    rgba.parse(settings.get_string(key));
+    colorButton.set_rgba(rgba);
+    colorButton.set_use_alpha(true);
+
+    colorButton.connect('color-set', () => {
+      const rgba = colorButton.get_rgba();
+      const color = rgba.to_string(); // returns e.g. "rgba(255,255,255,1)"
+      // Convert to hex if you prefer (optional helper below)
+      // settings.set_string(key, this.rgbaToHex(rgba));
+      settings.set_string(key, color);
     });
 
-    // Create mapping: string -> index and index -> string
-    const strToIndex = {
-      'Top left': 0,
-      'Top center': 1,
-      'Top right': 2,
-      'Middle left': 3,
-      'Middle center': 4,
-      'Middle right': 5,
-    };
-
-    const indexToString = {
-      0: 'Top left',
-      1: 'Top center',
-      2: 'Top right',
-      3: 'Middle left',
-      4: 'Middle center',
-      5: 'Middle right',
-    };
-
-    // Set initial selection from saved settings
-    const currentAnimal = settings.get_string(key);
-    if (currentAnimal in strToIndex) {
-      animalRow.selected = strToIndex[currentAnimal];
-    }
-
-    // Save to settings when user changes selection
-    animalRow.connect('notify::selected', () => {
-      const selectedIndex = animalRow.selected;
-      const selectedAnimal = indexToString[selectedIndex];
-      settings.set_string(key, selectedAnimal);
+    settings.connect(`changed::${key}`, () => {
+      rgba.parse(settings.get_string(key));
+      colorButton.set_rgba(rgba);
     });
 
-    return animalRow;
+    row.add_suffix(colorButton);
+    row.activatable_widget = colorButton;
+
+    return row;
   }
 
   // rgbaToHex(rgba) {

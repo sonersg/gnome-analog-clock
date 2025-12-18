@@ -13,28 +13,34 @@
       <description>Clock margin</description>
     </key>
 
-    <key name="clock-position" type="s">
-      <default>"Top right"</default>
-      <summary>Select clock position</summary>
-      <description>Select clock position from dropdown</description>
-    </key>
-    
-    <key name="clock-ticks-color" type="s">
-       <default>"rgba(0, 0, 0, 1)"</default>
-       <summary>Clock ticks color</summary>
-       <description>Color in rgba(r, g, b, a) format for Cairo.</description>
+    <key name="clock-position" type="i">
+      <default>2</default>
+      <summary>Select clock position on dropdown.</summary>
+      <description>Select clock position for desktop, default is 2: top right.</description>
     </key>
     
     <key name="hour-minute-color" type="s">
        <default>"rgba(255, 255, 255, 1)"</default>
-       <summary>Hour and minute hands color</summary>
+       <summary>Hour and minute hands color.</summary>
        <description>Color in rgba(r, g, b, a) format for Cairo.</description>
     </key>
     
+    <key name="hide-ticks" type="b">
+       <default>false</default>
+       <summary>Hide ticks.</summary>
+       <description>Show only hour and minute hands.</description>
+    </key>
+
     <key name="second-color" type="s">
        <default>"rgba(255, 0, 0, 1)"</default>
-       <summary>Second hand color</summary>
+       <summary>Second hand color.</summary>
        <description>Color in rgba(r, g, b, a) format for Cairo.</description>
+    </key>
+
+    <key name="clock-ticks-color" type="s">
+     <default>"rgba(0, 0, 0, 1)"</default>
+     <summary>Clock ticks color.</summary>
+     <description>Color in rgba(r, g, b, a) format for Cairo.</description>
     </key>
   </schema>
 </schemalist> 
