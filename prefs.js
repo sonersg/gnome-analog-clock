@@ -250,7 +250,7 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   }
 
   //////////////////////////////////////////////////
-  // buildClockPositionRow function, EXPECTS STRING KEY, NOT INTEGER
+  // buildClockPositionRow function, EXPECTS STRING, NOT INTEGER
   //////////////////////////////////////////////////
   // buildClockPositionRow(settings, key, labeltext) {
   //   // Create a container box to hold everything
