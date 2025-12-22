@@ -44,5 +44,3 @@
     </key>
   </schema>
 </schemalist> 
-
-<!-- nix-shell -p glib --run "glib-compile-schemas ~/.local/share/gnome-shell/extensions/gnome-analog-clock@sonersg.com/schemas" -->

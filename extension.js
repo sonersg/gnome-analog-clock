@@ -10,44 +10,16 @@ export default class AnalogClockExtension extends Extension {
     this._posIndex = this._settings.get_int('clock-position') ?? 2;
     this._hideTicks = this._settings.get_boolean('hide-ticks');
 
-    const monitorWidth = Main.layoutManager.primaryMonitor.width;
-    const monitorHeight = Main.layoutManager.primaryMonitor.height;
+    // Calculate positions once
+    const positions = this._calculatePositions();
+    const pos = positions[this._posIndex];
 
     // Get clock size in pixels from settings and make sure it is integer
     const clockSize = Math.round(this._settings.get_int('clock-size'));
 
-    // Get clock margin in pixels from settings and make sure it is integer
-    const clockMargin = Math.round(this._settings.get_int('clock-margin'));
-
-    const positions = [
-      { x: clockMargin, y: clockMargin }, // Top left
-      { x: (monitorWidth - clockSize) / 2, y: clockMargin }, // Top center
-      { x: monitorWidth - clockSize - clockMargin, y: clockMargin }, // Top right
-      // Center positions
-      { x: clockMargin, y: (monitorHeight - clockSize) / 2 }, // Middle left
-      { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 }, // Middle center
-      {
-        x: monitorWidth - clockSize - clockMargin,
-        y: (monitorHeight - clockSize) / 2,
-      }, // Middle right
-      // Bottom positions
-      { x: clockMargin, y: monitorHeight - clockSize - clockMargin }, // Bottom left
-      {
-        x: (monitorWidth - clockSize) / 2,
-        y: monitorHeight - clockSize - clockMargin,
-      }, // Bottom center
-      {
-        x: monitorWidth - clockSize - clockMargin,
-        y: monitorHeight - clockSize - clockMargin,
-      }, // Bottom right
-    ];
-
-    // Determine position index (e.g., always use top-right = index 2)
-    // const posIndex = this._settings.get_int('clock-position') ?? 2;
-
     this._desktopIcon = new St.DrawingArea({
-      x: positions[this._posIndex].x,
-      y: positions[this._posIndex].y,
+      x: pos.x,
+      y: pos.y,
       width: clockSize,
       height: clockSize,
       reactive: false,
@@ -96,41 +68,14 @@ export default class AnalogClockExtension extends Extension {
   _onSettingsChanged() {
     if (!this._desktopIcon) return;
 
-    const monitorWidth = Main.layoutManager.primaryMonitor.width;
-    const monitorHeight = Main.layoutManager.primaryMonitor.height;
-
-    const clockSize = Math.round(this._settings.get_int('clock-size'));
-    const clockMargin = Math.round(this._settings.get_int('clock-margin'));
-
-    // Determine position index (e.g., always use top-right = index 2)
+    // Update settings
     this._posIndex = this._settings.get_int('clock-position') ?? 2;
     this._hideTicks = this._settings.get_boolean('hide-ticks');
 
-    const positions = [
-      { x: clockMargin, y: clockMargin },
-      { x: (monitorWidth - clockSize) / 2, y: clockMargin },
-      { x: monitorWidth - clockSize - clockMargin, y: clockMargin },
-      { x: clockMargin, y: (monitorHeight - clockSize) / 2 },
-      { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 },
-      {
-        x: monitorWidth - clockSize - clockMargin,
-        y: (monitorHeight - clockSize) / 2,
-      },
-      { x: clockMargin, y: monitorHeight - clockSize - clockMargin },
-      {
-        x: (monitorWidth - clockSize) / 2,
-        y: monitorHeight - clockSize - clockMargin,
-      },
-      {
-        x: monitorWidth - clockSize - clockMargin,
-        y: monitorHeight - clockSize - clockMargin,
-      },
-    ];
-
-    const pos = positions[this._posIndex];
+    const clockSize = Math.round(this._settings.get_int('clock-size'));
 
     // Update position and size
-    this._desktopIcon.set_position(Math.round(pos.x), Math.round(pos.y));
+    this._updateClockPosition();
     this._desktopIcon.set_size(clockSize, clockSize);
 
     // Request redraw to reflect new size/appearance
@@ -171,6 +116,54 @@ export default class AnalogClockExtension extends Extension {
     // Fallback (e.g., log error or use default)
     // log(`[AnalogClock] Failed to parse color: "${colorStr}"`);
     return { r: 0, g: 0, b: 1, a: 1 }; // blue fallback
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // _calculatePositions function
+  /////////////////////////////////////////////////////////////////////////
+  _calculatePositions() {
+    const monitorWidth = Main.layoutManager.primaryMonitor.width;
+    const monitorHeight = Main.layoutManager.primaryMonitor.height;
+
+    // Get current settings for size and margin
+    const clockSize = Math.round(this._settings.get_int('clock-size'));
+    const clockMargin = Math.round(this._settings.get_int('clock-margin'));
+
+    return [
+      { x: clockMargin, y: clockMargin }, // Top left
+      { x: (monitorWidth - clockSize) / 2, y: clockMargin }, // Top center
+      { x: monitorWidth - clockSize - clockMargin, y: clockMargin }, // Top right
+      // Center positions
+      { x: clockMargin, y: (monitorHeight - clockSize) / 2 }, // Middle left
+      { x: (monitorWidth - clockSize) / 2, y: (monitorHeight - clockSize) / 2 }, // Middle center
+      {
+        x: monitorWidth - clockSize - clockMargin,
+        y: (monitorHeight - clockSize) / 2,
+      }, // Middle right
+      // Bottom positions
+      { x: clockMargin, y: monitorHeight - clockSize - clockMargin }, // Bottom left
+      {
+        x: (monitorWidth - clockSize) / 2,
+        y: monitorHeight - clockSize - clockMargin,
+      }, // Bottom center
+      {
+        x: monitorWidth - clockSize - clockMargin,
+        y: monitorHeight - clockSize - clockMargin,
+      }, // Bottom right
+    ];
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // _updateClockPosition function
+  /////////////////////////////////////////////////////////////////////////
+  _updateClockPosition() {
+    if (!this._desktopIcon) return;
+
+    const positions = this._calculatePositions();
+    const pos = positions[this._posIndex];
+
+    // Update position
+    this._desktopIcon.set_position(Math.round(pos.x), Math.round(pos.y));
   }
 
   /////////////////////////////////////////////////////////////////////////

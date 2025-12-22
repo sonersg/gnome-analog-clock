@@ -437,11 +437,7 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
     });
 
     // Add tooltip for accessibility
-    toggle.set_tooltip_text(
-      _(
-        'Toggle whether to apply transparency to all windows or just inactive ones'
-      )
-    );
+    toggle.set_tooltip_text(_('Toggle to hide clock ticks and second hand.'));
 
     settings.bind(key, toggle, 'active', Gio.SettingsBindFlags.DEFAULT);
 
