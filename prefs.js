@@ -250,78 +250,6 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
   }
 
   //////////////////////////////////////////////////
-  // buildClockPositionRow function, EXPECTS STRING, NOT INTEGER
-  //////////////////////////////////////////////////
-  // buildClockPositionRow(settings, key, labeltext) {
-  //   // Create a container box to hold everything
-  //   const container = new Gtk.Box({
-  //     orientation: Gtk.Orientation.HORIZONTAL,
-  //     spacing: 10,
-  //   });
-
-  //   // Create label
-  //   const label = new Gtk.Label({
-  //     label: labeltext,
-  //     halign: Gtk.Align.START,
-  //     xalign: 0,
-  //     wrap: true,
-  //   });
-  //   container.append(label);
-
-  //   // Create the StringList model with your options
-  //   const model = new Gtk.StringList();
-  //   const options = [
-  //     'Top left',
-  //     'Top center',
-  //     'Top right',
-  //     'Middle left',
-  //     'Middle center',
-  //     'Middle right',
-  //   ];
-
-  //   options.forEach(option => model.append(option));
-
-  //   // Create the dropdown (Gtk.DropDown instead of Adw.ComboRow)
-  //   const dropdown = new Gtk.DropDown({
-  //     model: model,
-  //     hexpand: true,
-  //   });
-
-  //   // Create mapping between string values and indices
-  //   const strToIndex = {};
-  //   const indexToString = {};
-
-  //   options.forEach((option, index) => {
-  //     strToIndex[option] = index;
-  //     indexToString[index] = option;
-  //   });
-
-  //   // Set initial selection from saved settings
-  //   const currentPosition = settings.get_string(key);
-  //   if (currentPosition in strToIndex) {
-  //     dropdown.selected = strToIndex[currentPosition];
-  //   }
-
-  //   // Save to settings when user changes selection
-  //   dropdown.connect('notify::selected', () => {
-  //     const selectedIndex = dropdown.selected;
-  //     const selectedPosition = indexToString[selectedIndex];
-  //     settings.set_string(key, selectedPosition);
-  //   });
-
-  //   // Update dropdown when settings change externally
-  //   settings.connect(`changed::${key}`, () => {
-  //     const newPosition = settings.get_string(key);
-  //     if (newPosition in strToIndex) {
-  //       dropdown.selected = strToIndex[newPosition];
-  //     }
-  //   });
-
-  //   container.append(dropdown);
-  //   return container;
-  // }
-
-  //////////////////////////////////////////////////
   // buildClockPositionRow function - USING Adw.ComboRow
   //////////////////////////////////////////////////
   buildClockPositionRow(settings, key, labeltext) {
@@ -508,13 +436,4 @@ export default class AnalogClockPreferences extends ExtensionPreferences {
 
     return row;
   }
-
-  // rgbaToHex(rgba) {
-  //   const r = Math.round(rgba.red * 255);
-  //   const g = Math.round(rgba.green * 255);
-  //   const b = Math.round(rgba.blue * 255);
-  //   return `#${r.toString(16).padStart(2, '0')}${g
-  //     .toString(16)
-  //     .padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  // }
 }

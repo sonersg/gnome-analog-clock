@@ -80,6 +80,29 @@ export default class AnalogClockExtension extends Extension {
 
     // Request redraw to reflect new size/appearance
     this._desktopIcon.queue_repaint();
+
+    // Cancel the timeout!
+    if (this._updateTimeout) {
+      GLib.source_remove(this._updateTimeout);
+      this._updateTimeout = null;
+    }
+
+    // Schedule repaint conditionally
+    if (this._settings.get_boolean('hide-ticks')) {
+      this._updateTimeout = GLib.timeout_add(
+        GLib.PRIORITY_DEFAULT,
+        60000,
+        () => {
+          this._desktopIcon.queue_repaint();
+          return GLib.SOURCE_CONTINUE; // keep the timeout running
+        }
+      );
+    } else {
+      this._updateTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 999, () => {
+        this._desktopIcon.queue_repaint();
+        return GLib.SOURCE_CONTINUE; // keep the timeout running
+      });
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -113,8 +136,6 @@ export default class AnalogClockExtension extends Extension {
       };
     }
 
-    // Fallback (e.g., log error or use default)
-    // log(`[AnalogClock] Failed to parse color: "${colorStr}"`);
     return { r: 0, g: 0, b: 1, a: 1 }; // blue fallback
   }
 
