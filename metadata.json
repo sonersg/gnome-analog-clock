@@ -2,7 +2,7 @@
   "uuid": "gnome-analog-clock@sonersg.com",
   "name": "Desktop Analog Clock",
   "description": "Analog clock for GNOME desktop.",
-  "shell-version": ["45", "46", "47", "48", "49"],
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
   "url": "https://github.com/sonersg/gnome-analog-clock",
   "settings-schema": "org.gnome.shell.extensions.desktop-analog-clock",
   "donations": {
@@ -10,6 +10,6 @@
     "github": "sonersg",
     "buymeacoffee": "sonersg"
   },
-  "versionName": "2025Ekim31",
-  "version": 1
+  "versionName": "2026June28",
+  "version": 2
 }
