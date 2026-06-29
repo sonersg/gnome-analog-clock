@@ -42,11 +42,8 @@ export default class AnalogClockExtension extends Extension {
   }
 
   disable() {
-    // Cancel the timeout!
-    if (this._updateTimeout) {
-      GLib.source_remove(this._updateTimeout);
-      this._updateTimeout = null;
-    }
+    // Cancel all timeouts
+    this._clearTimeouts();
 
     if (this._desktopIcon) {
       Main.layoutManager._backgroundGroup.remove_child(this._desktopIcon);
@@ -60,6 +57,21 @@ export default class AnalogClockExtension extends Extension {
     }
 
     this._settings = null;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // Helper method to clear all timeouts
+  /////////////////////////////////////////////////////////////////////////
+  _clearTimeouts() {
+    if (this._repaintTimeoutId) {
+      GLib.source_remove(this._repaintTimeoutId);
+      this._repaintTimeoutId = null;
+    }
+    // In case there's any other timeout that might have been set
+    if (this._settingsChangeTimeoutId) {
+      GLib.source_remove(this._settingsChangeTimeoutId);
+      this._settingsChangeTimeoutId = null;
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -81,28 +93,15 @@ export default class AnalogClockExtension extends Extension {
     // Request redraw to reflect new size/appearance
     this._desktopIcon.queue_repaint();
 
-    // Cancel the timeout!
-    if (this._updateTimeout) {
-      GLib.source_remove(this._updateTimeout);
-      this._updateTimeout = null;
-    }
+    // Clear existing timeouts
+    this._clearTimeouts();
 
-    // Schedule repaint conditionally
-    if (this._settings.get_boolean('hide-ticks')) {
-      this._updateTimeout = GLib.timeout_add(
-        GLib.PRIORITY_DEFAULT,
-        60000,
-        () => {
-          this._desktopIcon.queue_repaint();
-          return GLib.SOURCE_CONTINUE; // keep the timeout running
-        }
-      );
-    } else {
-      this._updateTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 999, () => {
-        this._desktopIcon.queue_repaint();
-        return GLib.SOURCE_CONTINUE; // keep the timeout running
-      });
-    }
+    // Schedule repaint with appropriate interval
+    const interval = this._settings.get_boolean('hide-ticks') ? 60000 : 1000;
+    this._repaintTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval, () => {
+      this._desktopIcon.queue_repaint();
+      return GLib.SOURCE_CONTINUE; // keep the timeout running
+    });
   }
 
   /////////////////////////////////////////////////////////////////////////
