@@ -1,7 +1,7 @@
 import St from 'gi://St';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import GLib from 'gi://GLib'; // ← Add this import to update time
+import GLib from 'gi://GLib'; // To update time
 
 export default class AnalogClockExtension extends Extension {
   enable() {
@@ -35,9 +35,9 @@ export default class AnalogClockExtension extends Extension {
     Main.layoutManager._backgroundGroup.add_child(this._desktopIcon);
 
     // Schedule repaint every 1000 ms (1 second)
-    this._updateTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+    this._repaintTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
       this._desktopIcon.queue_repaint();
-      return GLib.SOURCE_CONTINUE; // keep the timeout running
+      return GLib.SOURCE_CONTINUE; // Keep the timeout running
     });
   }
 
@@ -126,7 +126,7 @@ export default class AnalogClockExtension extends Extension {
     // Match rgb(r, g, b)
     match = colorStr.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
     if (match) {
-      // log(`[AnalogClock] match rgb "${colorStr}"`);
+      // log(`[AnalogClock] match rgba "${colorStr}"`);
       return {
         r: parseInt(match[1]) / 255,
         g: parseInt(match[2]) / 255,
@@ -292,3 +292,4 @@ export default class AnalogClockExtension extends Extension {
     cr.$dispose();
   }
 }
+
