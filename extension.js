@@ -68,10 +68,10 @@ export default class AnalogClockExtension extends Extension {
       this._repaintTimeoutId = null;
     }
     // In case there's any other timeout that might have been set
-    if (this._settingsChangeTimeoutId) {
-      GLib.source_remove(this._settingsChangeTimeoutId);
-      this._settingsChangeTimeoutId = null;
-    }
+    // if (this._settingsChangeTimeoutId) {
+    //   GLib.source_remove(this._settingsChangeTimeoutId);
+    //   this._settingsChangeTimeoutId = null;
+    // }
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ export default class AnalogClockExtension extends Extension {
     const interval = this._settings.get_boolean('hide-ticks') ? 60000 : 1000;
     this._repaintTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, interval, () => {
       this._desktopIcon.queue_repaint();
-      return GLib.SOURCE_CONTINUE; // keep the timeout running
+      return GLib.SOURCE_CONTINUE; // Keep the timeout running
     });
   }
 
